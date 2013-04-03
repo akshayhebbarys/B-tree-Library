@@ -8,6 +8,20 @@
 
 #include<stack>
 
+/*
+ * Things to do:
+ * 		insertion : done
+ * 		Traversal and display : done
+ * 		find 			//- return iterator
+ * 		bulk-loading
+ * 		deletion
+ * 		iterator
+ * 		may be providing a predicate for sort
+ * 		improving the code efficiency
+ * 		<< operator overloading for Node
+ * 		making it generic
+ */
+
 class Tree;
 
 class Node
@@ -34,10 +48,28 @@ public:													//interface to btree
 	void disp() const;
 	~Tree();
 
+	class Iterator
+	{
+	public:
+		Iterator(Node *Nptr, int position)
+		{
+			ptr = Nptr;
+			pos = position;
+		}
+		int operator*()
+		{
+			return ptr->keys[pos];
+		}
+	private:
+		Node *ptr;
+		int pos;
+	};
+
+	Iterator begin();
+	Iterator end();
 
 private:
 	void inorder_disp(Node*) const;
-	void split(Node*, Node*, int);
 	Node* split(Node*, int,int,int,stack<pair<Node*, int> > &);
 	void setlinks(Node*,Node*,Node*,Node*,int,int);
 
@@ -72,11 +104,6 @@ bool Node::insert(int new_key, int pos)
 
 		++num_of_elem;
 
-/*		std::cout << "inserted " << new_key << " pos : " << pos<< endl;
-		for(int i=0;i<num_of_elem;++i)
-			std::cout << keys[i] << " ";
-		std::cout << endl;
-*/
 		return true;
 	}
 	return false;									//node is full
@@ -232,24 +259,8 @@ Node* Tree::split(Node* big_child, int median, int pos, int new_key, stack<pair<
 		return_value = new_rhs;
 	}
 
-
 	if(new_root_created)
 		root = parent;
-
-/*
-	std::cout <<"\nbig child\n";
-	for(int i=0;i<big_child->num_of_elem;++i)
-		std::cout<< big_child->keys[i] << " ";
-	std::cout <<"\nnew rhs\n";
-	for(int i=0;i<new_rhs->num_of_elem;++i)
-		std::cout<< new_rhs->keys[i] << " ";
-	std::cout <<"\nparent\n";
-	for(int i=0;i<parent->num_of_elem;++i)
-		std::cout<< parent->keys[i] << " ";
-	std::cout <<"\nparent's left most\n";
-	for(int i=0;i<parent->links[0]->num_of_elem;++i)
-		std::cout<< parent->links[0]->keys[i] << " ";
-*/
 
 	return return_value;
 }
