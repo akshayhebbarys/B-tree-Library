@@ -94,6 +94,7 @@ Node::Node(int n)
 	links = new Node*[n];
 	for(int i=0;i<n;++i)
 		links[i] = 0;
+//	std::cout << "ctor\n";
 }
 
 bool Node::insert(int new_key, int pos)
@@ -119,6 +120,7 @@ Node::~Node()
 {
 	delete [] keys;
 	delete [] links;
+//	std::cout << "dtor\n";
 }
 
 /**************************************************************************************************************/
@@ -162,7 +164,7 @@ void Tree::push(int new_key)
 			}
 			else found_pos = true;
 		}
-//		std::cout << "\nPushing : " << new_key << " in pos : "<<i << " of " << temp << " which has " << temp->num_of_elem<<endl;
+
 		if(temp->insert(new_key,i) == false)			//here i : position to insert new element
 		{
 			int median = (order_-1)/2;
@@ -177,9 +179,6 @@ Node* Tree::split(Node* big_child, int median, int pos, int new_key, stack<pair<
 	int parent_pos,i,j;
 	bool new_root_created = false;
 
-//	std::cout << "\nTrying to insert : " << new_key <<endl;
-
-
 	if(back_trace.empty())
 	{
 		parent_pos = 0;
@@ -191,9 +190,6 @@ Node* Tree::split(Node* big_child, int median, int pos, int new_key, stack<pair<
 		parent = back_trace.top().first;
 		parent_pos = back_trace.top().second;
 	}
-
-//	std::cout << "\nPushing : " << new_key << " in pos : "<<pos << " of " << parent << " which has " << parent->num_of_elem << " elem that is " << parent->keys[0]<<endl;
-
 
 	new_rhs =  new Node(order_);
 
@@ -228,19 +224,20 @@ Node* Tree::split(Node* big_child, int median, int pos, int new_key, stack<pair<
 		new_rhs->links[j] = big_child->links[i];
 		big_child->num_of_elem = big_child->num_of_elem - j -1;
 
+
 		if(parent->insert(big_child->keys[median-1],parent_pos) == false)
 		{
 			back_trace.pop();
 			new_parent = split(parent,median,parent_pos,big_child->keys[median-1],back_trace);
+			big_child->insert(new_key,pos);
 			setlinks(parent,new_parent,big_child,new_rhs,parent_pos,median);
 		}
 		else
 		{
-			parent->links[parent_pos] = big_child;
-			parent->links[parent_pos+1] = new_rhs;
+			big_child->insert(new_key,pos);
+			setlinks(parent,big_child,new_rhs,parent_pos);
 		}
 
-		big_child->insert(new_key,pos);
 
 		return_value = big_child;
 	}
@@ -295,7 +292,7 @@ Node* Tree::split(Node* big_child, int median, int pos, int new_key, stack<pair<
 	return return_value;
 }
 
-void Tree::setlinks(Node* parent,Node* new_parent,Node* big_child,Node* new_rhs, int parent_pos,int median)
+void Tree::setlinks(Node* parent,Node* new_parent,Node* big_child,Node* new_rhs, int parent_pos,int median)	//when both big child and big parent are split
 {
 	if(parent_pos == median)
 	{
@@ -319,42 +316,18 @@ void Tree::setlinks(Node* parent,Node* new_parent,Node* big_child,Node* new_rhs,
 			new_parent->links[parent_pos -median -1] = 0;
 		else
 			new_parent->links[parent_pos -median -1] = big_child;
-			new_parent->links[parent_pos-median] = new_rhs;
-	}
-#if 0
-	if(parent_pos == median)
-	{
-		parent->links[parent_pos] = big_child;
-		new_parent->links[0] = new_rhs;
-	}
-	else if(parent_pos < median)
-	{
-		new_parent->links[parent_pos] = big_child;
-		new_parent->links[parent_pos+1] = new_rhs;
-	}
-	else
-	{
-		new_parent->links[parent_pos -median -1] = big_child;
 		new_parent->links[parent_pos-median] = new_rhs;
 	}
-#endif
 }
 
-void Tree::setlinks(Node* parent,Node* big_child,Node* new_rhs,int parent_pos)
+void Tree::setlinks(Node* parent,Node* big_child,Node* new_rhs,int parent_pos)		//when only big child is split
 {
-#if 1
 	if(big_child->isempty())
 		parent->links[parent_pos] = 0;
 	else
 		parent->links[parent_pos] = big_child;
 
 	parent->links[parent_pos+1] = new_rhs;
-#endif
-
-#if 0
-	parent->links[parent_pos] = big_child;
-	parent->links[parent_pos+1] = new_rhs;
-#endif
 }
 
 void Tree::disp() const
