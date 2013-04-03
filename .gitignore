@@ -1,4 +1,5 @@
-/Debug/b-tree
+Debug/b-tree
+Debug/*.o
 *.o
 *.out
 *~

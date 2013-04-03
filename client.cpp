@@ -17,22 +17,28 @@ int main()
 	int n = 2;
 	Tree t(n);
 
+/*
 	t.push(6);
 	t.push(5);
 	t.push(8);
 	t.push(3);
-/*	t.push(1);
+	t.push(1);
 	t.push(2);
 	t.push(4);
 	t.push(7);
 	t.push(10);
 	t.push(9);
+
 */
 
-/*
+///*
 	for(int i=0;i<20;++i)
-		t.push(i);
-*/
+	{
+		int k=rand()%30;
+//		cout << k<<"\n";
+		t.push(k);
+	}
+//*/
 
 /*
 		t.push(43);
