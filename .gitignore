@@ -1,0 +1,5 @@
+/Debug/b-tree
+*.o
+*.out
+*~
+*.swp
