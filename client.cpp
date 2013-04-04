@@ -16,10 +16,7 @@ template <typename T>
 void disp(T begin, T end)
 {
 	while(begin != end)
-	{
 		cout << *begin++ <<" ";
-//		++begin;
-	}
 	cout << endl;
 }
 
@@ -27,24 +24,35 @@ void disp(T begin, T end)
 int main()
 {
 	cout << "Welcome to b-tree library !" << endl;
-	int n = 4;												//n is order
-	Tree t(n);
+
+	Tree <int, 2>t;
+
+	Tree<char, 2> c;
+
+	Tree<string> str;
 
 	srand(time(0));
 	for(int i=0;i<20;++i)
 	{
-		int k=rand()%100;
+		int k=rand()%26;
 		cout << k<<" ";
 		t.push(k);
+		c.push(65+k);
 	}
 
 //	Tree::Iterator it = t.begin();
 //	Tree::Iterator it = t.end();
 
+	str.push("akshay");
+/*
 	cout<<endl;
 	t.disp();
 	cout<<endl;
-
+	c.disp();
+	cout<<endl;
+	str.disp();
+	cout<<endl;
+*/
 
 /*
 	while(it != t.end())
@@ -53,7 +61,7 @@ int main()
 		++it;
 	}
 */
-	disp(t.begin(),t.end());
+//	disp(t.begin(),t.end());
 
 //	cout << *it << endl;
 /*
@@ -77,6 +85,13 @@ int main()
 	}
 */
 
+	t.disp_like_tree();
+
+	c.disp_like_tree();
+
+	str.disp_like_tree();
+
+//	disp(c.begin(),c.end());
 
 //	for(int i=0;i<10;++i)
 //		cout<<*++it<<endl;

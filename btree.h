@@ -7,6 +7,7 @@
 #define BTREE_H
 
 #include<stack>
+#include<deque>
 
 /*
  * Things to do:
@@ -15,20 +16,21 @@
  * 		find 			//- return iterator
  * 		bulk-loading
  * 		deletion
- * 		iterator
+ * 		iterator	: done
  * 		may be providing a predicate for sort
  * 		improving the code efficiency
  * 		<< operator overloading for Node
- * 		making it generic
+ * 		making it generic	: done
  */
 
-class Tree;
+template<typename, int=10> class Tree;
 
+template <typename T, int _Order>
 class Node
 {
 private:
-	Node(int n);
-	bool insert(int new_key, int pos);
+	Node();
+	bool insert(T new_key, int pos);
 	~Node();
 
 	bool isempty()
@@ -36,21 +38,22 @@ private:
 		return !num_of_elem;
 	}
 
-	int order;
+//	int _Order;
 	int num_of_elem;
-	int *keys;
-	Node* *links;
+	T *keys;
+	Node<T,_Order>* *links;
 
-	friend class Tree;
+	friend class Tree<T,_Order>;
 };
 
+template <typename T, int _Order>
 class Tree
 {
 public:													//interface to btree
-	Tree(int n);
-	void push(int new_key);
-	bool find(int key) const;
+	Tree();
+	void push(T new_key);
 	void disp() const;
+	void disp_like_tree() const;						//crashes if _Order=2
 	~Tree();
 
 	class Iterator
@@ -58,7 +61,7 @@ public:													//interface to btree
 	public:
 		Iterator() :ptr(0),pos(0),root(0){}
 
-		Iterator(Node* Nptr, int position, stack <pair<Node*, int> > trace, Node * Root):ptr(Nptr),pos(position),back_trace(trace),root(Root){}
+		Iterator(Node<T,_Order>* Nptr, int position, stack <pair<Node<T,_Order>*, int> > trace, Node<T,_Order> * Root):ptr(Nptr),pos(position),back_trace(trace),root(Root){}
 
 		Iterator(const Iterator& i)
 		{
@@ -85,20 +88,20 @@ public:													//interface to btree
 
 		Iterator& operator++()
 		{
-			Node *temp = ptr;
+			Node<T,_Order> *temp = ptr;
 //			std::cout << "iterator : " << temp->keys[0]<<" index : " << pos <<endl;
-			std::cout << "Back trace top : " << back_trace.top().first->keys[0]<<" index : " << back_trace.top().second <<endl;
+//			std::cout << "Back trace top : " << back_trace.top().first->keys[0]<<" index : " << back_trace.top().second <<std::endl;
 			if(pos+1 <= temp->num_of_elem && temp->links[pos+1])
 			{
 //				std::cout << "popping2 : "<<back_trace.top().first->keys[0] << " index : " << back_trace.top().second << endl;
 				back_trace.pop();
 //				std::cout << "pushing2 : "<<temp->keys[0] << " index : " <<pos+1<< endl;
-				back_trace.push(pair<Node*, int> (temp,pos+1));
+				back_trace.push(pair<Node<T,_Order>*, int> (temp,pos+1));
 				temp = temp->links[pos+1];
 				while(temp)
 				{
 //					std::cout << "pushing : "<<temp->keys[0] << " index : " <<0<< endl;
-					back_trace.push(pair<Node *,int> (temp,0));
+					back_trace.push(pair<Node<T,_Order> *,int> (temp,0));
 					temp = temp->links[0];
 				}
 			}
@@ -120,7 +123,7 @@ public:													//interface to btree
 			{
 				while(temp)
 				{
-					back_trace.push(pair<Node*,int>(temp,temp->num_of_elem));
+					back_trace.push(pair<Node<T,_Order>*,int>(temp,temp->num_of_elem));
 					temp = temp->links[temp->num_of_elem];
 				}
 				ptr = temp;
@@ -137,15 +140,15 @@ public:													//interface to btree
 		Iterator operator++(int)
 		{
 			Iterator prev_val = *this;
-			Node *temp = ptr;
+			Node<T,_Order> *temp = ptr;
 			if(pos+1 <= temp->num_of_elem && temp->links[pos+1])
 			{
 				back_trace.pop();
-				back_trace.push(pair<Node*, int> (temp,pos+1));
+				back_trace.push(pair<Node<T,_Order>*, int> (temp,pos+1));
 				temp = temp->links[pos+1];
 				while(temp)
 				{
-					back_trace.push(pair<Node *,int> (temp,0));
+					back_trace.push(pair<Node<T,_Order> *,int> (temp,0));
 					temp = temp->links[0];
 				}
 			}
@@ -166,7 +169,7 @@ public:													//interface to btree
 			{
 				while(temp)
 				{
-					back_trace.push(pair<Node*,int>(temp,temp->num_of_elem));
+					back_trace.push(pair<Node<T,_Order>*,int>(temp,temp->num_of_elem));
 					temp = temp->links[temp->num_of_elem];
 				}
 				ptr = temp;
@@ -182,17 +185,17 @@ public:													//interface to btree
 
 		Iterator& operator--()
 		{
-			Node *temp = ptr;
+			Node<T,_Order> *temp = ptr;
 			if(temp != NULL && pos == 0)
 			{
 				back_trace.pop();
 				if(temp->links[pos])
 				{
-					back_trace.push(pair<Node*, int>(temp,pos));
+					back_trace.push(pair<Node<T,_Order>*, int>(temp,pos));
 					temp = temp->links[pos];
 					while(temp)
 					{
-						back_trace.push(pair<Node*,int>(temp,temp->num_of_elem));
+						back_trace.push(pair<Node<T,_Order>*,int>(temp,temp->num_of_elem));
 						temp=temp->links[temp->num_of_elem];
 					}
 					back_trace.top().second -= 1;
@@ -205,10 +208,10 @@ public:													//interface to btree
 					}
 					if(back_trace.empty())
 					{
-						Node* temp = root;
+						Node<T,_Order>* temp = root;
 						while(temp)
 						{
-							back_trace.push(pair<Node*, int>(temp,0));
+							back_trace.push(pair<Node<T,_Order>*, int>(temp,0));
 							temp=temp->links[0];
 						}
 					}
@@ -221,11 +224,11 @@ public:													//interface to btree
 				back_trace.top().second -= 1;
 				if(temp && temp->links[pos])
 				{
-					back_trace.push(pair<Node*, int>(temp,pos));
+					back_trace.push(pair<Node<T,_Order>*, int>(temp,pos));
 					temp = temp->links[pos];
 					while(temp)
 					{
-						back_trace.push(pair<Node*,int>(temp,temp->num_of_elem));
+						back_trace.push(pair<Node<T,_Order>*,int>(temp,temp->num_of_elem));
 						temp=temp->links[temp->num_of_elem];
 					}
 					back_trace.top().second -= 1;
@@ -241,17 +244,17 @@ public:													//interface to btree
 		Iterator operator--(int)
 		{
 			Iterator prev_val = *this;
-			Node *temp = ptr;
+			Node<T,_Order> *temp = ptr;
 			if(temp != NULL && pos == 0)
 			{
 				back_trace.pop();
 				if(temp->links[pos])
 				{
-					back_trace.push(pair<Node*, int>(temp,pos));
+					back_trace.push(pair<Node<T,_Order>*, int>(temp,pos));
 					temp = temp->links[pos];
 					while(temp)
 					{
-						back_trace.push(pair<Node*,int>(temp,temp->num_of_elem));
+						back_trace.push(pair<Node<T,_Order>*,int>(temp,temp->num_of_elem));
 						temp=temp->links[temp->num_of_elem];
 					}
 					back_trace.top().second -= 1;
@@ -264,10 +267,10 @@ public:													//interface to btree
 					}
 					if(back_trace.empty())
 					{
-						Node* temp = root;
+						Node<T,_Order>* temp = root;
 						while(temp)
 						{
-							back_trace.push(pair<Node*, int>(temp,0));
+							back_trace.push(pair<Node<T,_Order>*, int>(temp,0));
 							temp=temp->links[0];
 						}
 					}
@@ -280,11 +283,11 @@ public:													//interface to btree
 				back_trace.top().second -= 1;
 				if(temp && temp->links[pos])
 				{
-					back_trace.push(pair<Node*, int>(temp,pos));
+					back_trace.push(pair<Node<T,_Order>*, int>(temp,pos));
 					temp = temp->links[pos];
 					while(temp)
 					{
-						back_trace.push(pair<Node*,int>(temp,temp->num_of_elem));
+						back_trace.push(pair<Node<T,_Order>*,int>(temp,temp->num_of_elem));
 						temp=temp->links[temp->num_of_elem];
 					}
 					back_trace.top().second -= 1;
@@ -299,20 +302,20 @@ public:													//interface to btree
 
 
 	private:
-		Node *ptr;
+		Node<T,_Order> *ptr;
 		int pos;
-		stack <pair<Node*, int> > back_trace;
-		Node *root;
+		stack <pair<Node<T,_Order>*, int> > back_trace;
+		Node<T,_Order> *root;
 	};
 
 	Iterator begin()
 	{
-		stack <pair<Node*, int> > trace;
-		Node* temp = root;
+		stack <pair<Node<T,_Order>*, int> > trace;
+		Node<T,_Order>* temp = root;
 		while(temp)
 		{
 //			std::cout << "pushing : "<<temp->keys[0] << " index : " <<0<< endl;
-			trace.push(pair<Node*, int>(temp,0));
+			trace.push(pair<Node<T,_Order>*, int>(temp,0));
 			temp=temp->links[0];
 		}
 		return Iterator(trace.top().first,0,trace, root);
@@ -320,42 +323,51 @@ public:													//interface to btree
 
 	Iterator end()
 	{
-		stack<pair<Node*, int> > trace;
-		Node* temp = root;
+		stack<pair<Node<T,_Order>*, int> > trace;
+		Node<T,_Order>* temp = root;
 		while(temp)
 		{
-			trace.push(pair<Node*,int>(temp,temp->num_of_elem));
+			trace.push(pair<Node<T,_Order>*,int>(temp,temp->num_of_elem));
 			temp = temp->links[temp->num_of_elem];
 		}
 		return Iterator(temp,0,trace, root);
 	}
 
-private:
-	void inorder_disp(Node*) const;
-	Node* split(Node*, int,int,int,stack<pair<Node*, int> > &);
-	void setlinks(Node*,Node*,Node*,Node*,int,int);					//when parent gets split
-	void setlinks(Node*,Node*,Node*,int);								//when only big child is split
+	Iterator find(int key)											//not implemented
+	{
+		std::cout << key;
+		return Iterator();
+	}
 
 private:
-	int order_;
-	Node* root;
+	void inorder_disp(Node<T,_Order>*) const;
+	Node<T,_Order>* split(Node<T,_Order>*, int,int,T,stack<pair<Node<T,_Order>*, int> > &);
+	void setlinks(Node<T,_Order>*,Node<T,_Order>*,Node<T,_Order>*,Node<T,_Order>*,int,int);					//when parent gets split
+	void setlinks(Node<T,_Order>*,Node<T,_Order>*,Node<T,_Order>*,int);								//when only big child is split
+	void free_all_nodes(Node<T,_Order>*);											//uses post-_Order
+	void show_deque(deque<Node<T,_Order>*> &) const;
+
+private:
+//	int _Order;
+	Node<T,_Order>* root;
 };
 
 /**************************************************************************************************************/
-
-Node::Node(int n)
+template <typename T, int _Order>
+Node<T,_Order>::Node()
 {
-	order= n;
 	num_of_elem = 0;
-	keys = new int[n-1];
-	links = new Node*[n];
-	for(int i=0;i<n;++i)
+	keys = new T[_Order-1];
+	links = new Node<T,_Order>*[_Order];
+	for(int i=0;i<_Order;++i)
 		links[i] = 0;
+//	std::cout << "ctor\n";
 }
 
-bool Node::insert(int new_key, int pos)
+template <typename T, int _Order>
+bool Node<T,_Order>::insert(T new_key, int pos)
 {
-	if(num_of_elem < (order-1))						//handles both insertions : 1)insert at end	2)insert in middle
+	if(num_of_elem < (_Order-1))						//handles both insertions : 1)insert at end	2)insert in middle
 	{
 		links[num_of_elem+1] = links[num_of_elem];	//shifting keys and links by 1 place
 		for(int i=num_of_elem;i>pos;--i)
@@ -372,40 +384,46 @@ bool Node::insert(int new_key, int pos)
 	return false;									//node is full
 }
 
-Node::~Node()
+template <typename T, int _Order>
+Node<T,_Order>::~Node()
 {
 	delete [] keys;
 	delete [] links;
+//	std::cout << "dtor\n";
 }
 
 /**************************************************************************************************************/
 
-Tree::Tree(int n):order_(n),root(0)
-{}
+template <typename T, int _Order>
+Tree<T,_Order>::Tree()//:_Order(_Order),root(0)
+{
+	root =0;
+}
 
-void Tree::push(int new_key)
+template <typename T, int _Order>
+void Tree<T,_Order>::push(T new_key)
 {
 	bool found_pos = false;
 	if(root == NULL)
 	{
-		root = new Node(order_);
+		root = new Node<T,_Order>();
 		root->insert(new_key,0);
 	}
 	else
 	{
-		Node *temp = root;
-		stack <pair<Node*, int> > back_trace;
+		Node<T,_Order> *temp = root;
+		stack <pair<Node<T,_Order>*, int> > back_trace;
 		int i=0;
 		while(found_pos != true)
 		{
 			if(i < temp->num_of_elem && new_key > temp->keys[i])
 			{
 				++i;
-				if(i == (order_- 1))
+				if(i == (_Order- 1))
 				{
 					if(temp->links[i])
 					{
-						back_trace.push( pair<Node*, int> (temp,i));
+						back_trace.push( pair<Node<T,_Order>*, int> (temp,i));
 						temp=temp->links[i]; i=0;
 					}
 					else
@@ -414,7 +432,7 @@ void Tree::push(int new_key)
 			}
 			else if(temp->links[i])
 			{
-				back_trace.push(pair<Node*, int> (temp,i));
+				back_trace.push(pair<Node<T,_Order>*, int> (temp,i));
 				temp=temp->links[i];i=0;
 			}
 			else found_pos = true;
@@ -422,22 +440,23 @@ void Tree::push(int new_key)
 
 		if(temp->insert(new_key,i) == false)			//here i : position to insert new element
 		{
-			int median = (order_-1)/2;
+			int median = (_Order-1)/2;
 			split(temp, median,i, new_key, back_trace);
 		}
 	}
 }
 
-Node* Tree::split(Node* big_child, int median, int pos, int new_key, stack<pair<Node*, int> > &back_trace)
+template <typename T, int _Order>
+Node<T,_Order>* Tree<T,_Order>::split(Node<T,_Order>* big_child, int median, int pos, T new_key, stack<pair<Node<T,_Order>*, int> > &back_trace)
 {
-	Node *parent,*new_rhs, *new_parent=0,*return_value;
+	Node<T,_Order> *parent,*new_rhs, *new_parent=0,*return_value;
 	int parent_pos,i,j;
 	bool new_root_created = false;
 
 	if(back_trace.empty())
 	{
 		parent_pos = 0;
-		parent =  new Node(order_);
+		parent =  new Node<T,_Order>();
 		new_root_created=true;
 	}
 	else
@@ -446,11 +465,11 @@ Node* Tree::split(Node* big_child, int median, int pos, int new_key, stack<pair<
 		parent_pos = back_trace.top().second;
 	}
 
-	new_rhs =  new Node(order_);
+	new_rhs =  new Node<T,_Order>();
 
 	if(median == pos)
 	{
-		for(i=median, j=0;i<order_-1;++i,++j)
+		for(i=median, j=0;i<_Order-1;++i,++j)
 		{
 			new_rhs->insert(big_child->keys[i],j);
 			new_rhs->links[j] = big_child->links[i];
@@ -471,7 +490,7 @@ Node* Tree::split(Node* big_child, int median, int pos, int new_key, stack<pair<
 	}
 	else if(median > pos)
 	{
-		for(i=median, j=0;i<order_-1;++i,++j)
+		for(i=median, j=0;i<_Order-1;++i,++j)
 		{
 			new_rhs->insert(big_child->keys[i],j);
 			new_rhs->links[j] = big_child->links[i];
@@ -498,7 +517,7 @@ Node* Tree::split(Node* big_child, int median, int pos, int new_key, stack<pair<
 	}
 	else
 	{
-		for(i=median+1, j=0;i<order_-1;++i,++j)
+		for(i=median+1, j=0;i<_Order-1;++i,++j)
 		{
 			new_rhs->insert(big_child->keys[i],j);
 			new_rhs->links[j] = big_child->links[i];
@@ -547,7 +566,8 @@ Node* Tree::split(Node* big_child, int median, int pos, int new_key, stack<pair<
 	return return_value;
 }
 
-void Tree::setlinks(Node* parent,Node* new_parent,Node* big_child,Node* new_rhs, int parent_pos,int median)	//when both big child and big parent are split
+template <typename T, int _Order>
+void Tree<T,_Order>::setlinks(Node<T,_Order>* parent,Node<T,_Order>* new_parent,Node<T,_Order>* big_child,Node<T,_Order>* new_rhs, int parent_pos,int median)	//when both big child and big parent are split
 {
 	if(parent_pos == median)
 	{
@@ -575,7 +595,8 @@ void Tree::setlinks(Node* parent,Node* new_parent,Node* big_child,Node* new_rhs,
 	}
 }
 
-void Tree::setlinks(Node* parent,Node* big_child,Node* new_rhs,int parent_pos)		//when only big child is split
+template <typename T, int _Order>
+void Tree<T,_Order>::setlinks(Node<T,_Order>* parent,Node<T,_Order>* big_child,Node<T,_Order>* new_rhs,int parent_pos)		//when only big child is split
 {
 	if(big_child->isempty())
 		parent->links[parent_pos] = 0;
@@ -585,12 +606,14 @@ void Tree::setlinks(Node* parent,Node* big_child,Node* new_rhs,int parent_pos)		
 	parent->links[parent_pos+1] = new_rhs;
 }
 
-void Tree::disp() const
+template <typename T, int _Order>
+void Tree<T,_Order>::disp() const
 {
 	inorder_disp(root);
 }
 
-void Tree::inorder_disp(Node *temp) const
+template <typename T, int _Order>
+void Tree<T,_Order>::inorder_disp(Node<T,_Order> *temp) const
 {
 	if(temp)
 	{
@@ -604,16 +627,60 @@ void Tree::inorder_disp(Node *temp) const
 	}
 }
 
-bool Tree::find(int key) const
+template <typename T, int _Order>
+void Tree<T,_Order>::show_deque(deque<Node<T,_Order>*> &dq) const
 {
-	if(key == 0)
-		return true;
-	return false;
+	if(!dq.empty())
+	{
+		int size = dq.size(),j;
+		for(int i=0; i< size;++i)
+		{
+			Node<T,_Order>* temp = dq.front();
+			dq.pop_front();
+			if(temp)
+			{
+				for(j=0;j<temp->num_of_elem;++j)
+				{
+					std::cout<<temp->keys[j] << " ";
+					dq.push_back(temp->links[j]);
+				}
+				dq.push_back(temp->links[j]);
+				std::cout<< "\t";
+			}
+		}
+		std::cout << "\n";
+		show_deque(dq);
+	}
 }
 
-Tree::~Tree()
+template <typename T, int _Order>
+void Tree<T,_Order>::disp_like_tree() const
 {
-	delete root;
+	deque<Node<T,_Order>* > dq;
+	dq.push_back(root);
+	show_deque(dq);
+}
+
+template <typename T, int _Order>
+void Tree<T,_Order>::free_all_nodes(Node<T,_Order>* temp)
+{
+	if(temp)
+	{
+		for(int i=0;i<temp->num_of_elem;++i)
+		{
+			if(i ==0 )
+				free_all_nodes(temp->links[i]);
+			free_all_nodes(temp->links[i+1]);
+		}
+		delete temp;
+	}
+}
+
+template <typename T, int _Order>
+Tree<T,_Order>::~Tree()
+{
+	free_all_nodes(root);
+	root =0;
 }
 
 #endif /* BTREE_H */
