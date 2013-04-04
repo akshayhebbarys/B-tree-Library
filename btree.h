@@ -56,22 +56,279 @@ public:													//interface to btree
 	class Iterator
 	{
 	public:
-		Iterator(Node *Nptr, int position)
+		Iterator() :ptr(0),pos(0),root(0){}
+
+		Iterator(Node* Nptr, int position, stack <pair<Node*, int> > trace, Node * Root):ptr(Nptr),pos(position),back_trace(trace),root(Root){}
+
+		Iterator(const Iterator& i)
 		{
-			ptr = Nptr;
-			pos = position;
+			ptr = i.ptr;
+			pos = i.pos;
+			back_trace = i.back_trace;
+			root = i.root;
 		}
-		int operator*()
+
+		int operator*() const
 		{
 			return ptr->keys[pos];
 		}
+
+		bool operator==(const Iterator& rhs) const
+		{
+			return (ptr == rhs.ptr && pos == rhs.pos);
+		}
+
+		bool operator!=(const Iterator& rhs) const
+		{
+			return !(*this == rhs);
+		}
+
+		Iterator& operator++()
+		{
+			Node *temp = ptr;
+//			std::cout << "iterator : " << temp->keys[0]<<" index : " << pos <<endl;
+			std::cout << "Back trace top : " << back_trace.top().first->keys[0]<<" index : " << back_trace.top().second <<endl;
+			if(pos+1 <= temp->num_of_elem && temp->links[pos+1])
+			{
+//				std::cout << "popping2 : "<<back_trace.top().first->keys[0] << " index : " << back_trace.top().second << endl;
+				back_trace.pop();
+//				std::cout << "pushing2 : "<<temp->keys[0] << " index : " <<pos+1<< endl;
+				back_trace.push(pair<Node*, int> (temp,pos+1));
+				temp = temp->links[pos+1];
+				while(temp)
+				{
+//					std::cout << "pushing : "<<temp->keys[0] << " index : " <<0<< endl;
+					back_trace.push(pair<Node *,int> (temp,0));
+					temp = temp->links[0];
+				}
+			}
+			else if(pos + 1 < temp->num_of_elem)
+			{
+				back_trace.top().second += 1;
+			}
+			else
+			{
+				while(!back_trace.empty() && ((back_trace.top().second + 1 == back_trace.top().first->num_of_elem  && back_trace.top().first->links[back_trace.top().second+1] == 0 )||
+						back_trace.top().second + 1 > back_trace.top().first->num_of_elem ))
+				{
+//					std::cout << "popping3 : "<<back_trace.top().first->keys[0] << " index : " << back_trace.top().second << endl;
+					back_trace.pop();
+				}
+			}
+
+			if(back_trace.empty())						//if the stack becomes empty, make iterator point to end node
+			{
+				while(temp)
+				{
+					back_trace.push(pair<Node*,int>(temp,temp->num_of_elem));
+					temp = temp->links[temp->num_of_elem];
+				}
+				ptr = temp;
+				pos = 0;
+			}
+			else
+			{
+				ptr = back_trace.top().first;
+				pos = back_trace.top().second;
+			}
+			return *this;
+		}
+
+		Iterator operator++(int)
+		{
+			Iterator prev_val = *this;
+			Node *temp = ptr;
+			if(pos+1 <= temp->num_of_elem && temp->links[pos+1])
+			{
+				back_trace.pop();
+				back_trace.push(pair<Node*, int> (temp,pos+1));
+				temp = temp->links[pos+1];
+				while(temp)
+				{
+					back_trace.push(pair<Node *,int> (temp,0));
+					temp = temp->links[0];
+				}
+			}
+			else if(pos + 1 < temp->num_of_elem)
+			{
+				back_trace.top().second += 1;
+			}
+			else
+			{
+				while(!back_trace.empty() && ((back_trace.top().second + 1 == back_trace.top().first->num_of_elem  && back_trace.top().first->links[back_trace.top().second+1] == 0 )||
+						back_trace.top().second + 1 > back_trace.top().first->num_of_elem ))
+				{
+					back_trace.pop();
+				}
+			}
+
+			if(back_trace.empty())						//if the stack becomes empty, make iterator point to end node
+			{
+				while(temp)
+				{
+					back_trace.push(pair<Node*,int>(temp,temp->num_of_elem));
+					temp = temp->links[temp->num_of_elem];
+				}
+				ptr = temp;
+				pos = 0;
+			}
+			else
+			{
+				ptr = back_trace.top().first;
+				pos = back_trace.top().second;
+			}
+			return prev_val;
+		}
+
+		Iterator& operator--()
+		{
+			Node *temp = ptr;
+			if(temp != NULL && pos == 0)
+			{
+				back_trace.pop();
+				if(temp->links[pos])
+				{
+					back_trace.push(pair<Node*, int>(temp,pos));
+					temp = temp->links[pos];
+					while(temp)
+					{
+						back_trace.push(pair<Node*,int>(temp,temp->num_of_elem));
+						temp=temp->links[temp->num_of_elem];
+					}
+					back_trace.top().second -= 1;
+				}
+				else
+				{
+					while( !back_trace.empty() && back_trace.top().second == 0)
+					{
+						back_trace.pop();
+					}
+					if(back_trace.empty())
+					{
+						Node* temp = root;
+						while(temp)
+						{
+							back_trace.push(pair<Node*, int>(temp,0));
+							temp=temp->links[0];
+						}
+					}
+					else
+						back_trace.top().second -= 1;
+				}
+			}
+			else
+			{
+				back_trace.top().second -= 1;
+				if(temp && temp->links[pos])
+				{
+					back_trace.push(pair<Node*, int>(temp,pos));
+					temp = temp->links[pos];
+					while(temp)
+					{
+						back_trace.push(pair<Node*,int>(temp,temp->num_of_elem));
+						temp=temp->links[temp->num_of_elem];
+					}
+					back_trace.top().second -= 1;
+				}
+			}
+
+			ptr = back_trace.top().first;
+			pos = back_trace.top().second;
+
+			return *this;
+		}
+
+		Iterator operator--(int)
+		{
+			Iterator prev_val = *this;
+			Node *temp = ptr;
+			if(temp != NULL && pos == 0)
+			{
+				back_trace.pop();
+				if(temp->links[pos])
+				{
+					back_trace.push(pair<Node*, int>(temp,pos));
+					temp = temp->links[pos];
+					while(temp)
+					{
+						back_trace.push(pair<Node*,int>(temp,temp->num_of_elem));
+						temp=temp->links[temp->num_of_elem];
+					}
+					back_trace.top().second -= 1;
+				}
+				else
+				{
+					while( !back_trace.empty() && back_trace.top().second == 0)
+					{
+						back_trace.pop();
+					}
+					if(back_trace.empty())
+					{
+						Node* temp = root;
+						while(temp)
+						{
+							back_trace.push(pair<Node*, int>(temp,0));
+							temp=temp->links[0];
+						}
+					}
+					else
+						back_trace.top().second -= 1;
+				}
+			}
+			else
+			{
+				back_trace.top().second -= 1;
+				if(temp && temp->links[pos])
+				{
+					back_trace.push(pair<Node*, int>(temp,pos));
+					temp = temp->links[pos];
+					while(temp)
+					{
+						back_trace.push(pair<Node*,int>(temp,temp->num_of_elem));
+						temp=temp->links[temp->num_of_elem];
+					}
+					back_trace.top().second -= 1;
+				}
+			}
+
+			ptr = back_trace.top().first;
+			pos = back_trace.top().second;
+
+			return prev_val;
+		}
+
+
 	private:
 		Node *ptr;
 		int pos;
+		stack <pair<Node*, int> > back_trace;
+		Node *root;
 	};
 
-	Iterator begin();
-	Iterator end();
+	Iterator begin()
+	{
+		stack <pair<Node*, int> > trace;
+		Node* temp = root;
+		while(temp)
+		{
+//			std::cout << "pushing : "<<temp->keys[0] << " index : " <<0<< endl;
+			trace.push(pair<Node*, int>(temp,0));
+			temp=temp->links[0];
+		}
+		return Iterator(trace.top().first,0,trace, root);
+	}
+
+	Iterator end()
+	{
+		stack<pair<Node*, int> > trace;
+		Node* temp = root;
+		while(temp)
+		{
+			trace.push(pair<Node*,int>(temp,temp->num_of_elem));
+			temp = temp->links[temp->num_of_elem];
+		}
+		return Iterator(temp,0,trace, root);
+	}
 
 private:
 	void inorder_disp(Node*) const;
@@ -94,7 +351,6 @@ Node::Node(int n)
 	links = new Node*[n];
 	for(int i=0;i<n;++i)
 		links[i] = 0;
-//	std::cout << "ctor\n";
 }
 
 bool Node::insert(int new_key, int pos)
@@ -120,7 +376,6 @@ Node::~Node()
 {
 	delete [] keys;
 	delete [] links;
-//	std::cout << "dtor\n";
 }
 
 /**************************************************************************************************************/
