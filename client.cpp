@@ -72,9 +72,9 @@ int main()
 	disp(c.begin(),c.end());
 
 
-//	Tree<string,4,Less<string> >::Iterator it = str.begin();
+	Tree<string,4,Less<string> >::Iterator it = str.begin();
 
-	auto it = str.begin();
+//	auto it = str.begin();
 
 //	auto itt = str.end();
 
