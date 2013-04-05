@@ -6,9 +6,9 @@
 #ifndef BTREE_H
 #define BTREE_H
 
-#include<stack>				//required to store path of traversal
-#include<deque>				//required to display our data structure as tree
-#include<cstdlib>				//used for 'exit' if client chooses bad '_Order'
+#include <stack>				//required to store path of traversal
+#include <deque>				//required to display our data structure as tree
+#include <cstdlib>				//used for 'exit' if client chooses bad '_Order'
 
 /*
  * Things to do:
@@ -23,7 +23,13 @@
  * 		making it generic	: done
  */
 
-template<typename, int=6> class Tree;
+//template<typename> class More;
+
+
+template<typename> class More;
+template<typename> class Less;
+
+template <typename T, int =6 , typename = More<T> > class Tree ;
 
 template <typename T, int _Order>
 class Node
@@ -42,10 +48,10 @@ private:
 	T *keys;
 	Node<T,_Order>* *links;
 
-	friend class Tree<T,_Order>;
+	template < typename,int,typename> friend class Tree;
 };
 
-template <typename T, int _Order>
+template <typename T, int _Order , typename _Predicate>
 class Tree
 {
 public:													//interface to btree
@@ -347,6 +353,7 @@ private:
 
 private:
 	Node<T,_Order>* root;
+	_Predicate predicate;
 };
 
 /**************************************************************************************************************/
@@ -391,9 +398,10 @@ Node<T,_Order>::~Node()
 
 /**************************************************************************************************************/
 
-template <typename T, int _Order>
-Tree<T,_Order>::Tree():root(0)
+template <typename T, int _Order , typename _Predicate>
+Tree<T,_Order,_Predicate>::Tree():root(0)
 {
+	predicate = _Predicate();
 	if(_Order < 2)
 	{
 		std::cerr << "\nCould not create B-tree\nOrder should be at-least 2 [ie Number of elements in each node should be at-least 1]\nAborting\n";
@@ -401,8 +409,8 @@ Tree<T,_Order>::Tree():root(0)
 	}
 }
 
-template <typename T, int _Order>
-void Tree<T,_Order>::push(T new_key)
+template <typename T, int _Order , typename _Predicate>
+void Tree<T,_Order,_Predicate>::push(T new_key)
 {
 	bool found_pos = false;
 	if(root == NULL)
@@ -417,7 +425,7 @@ void Tree<T,_Order>::push(T new_key)
 		int i=0;
 		while(found_pos != true)
 		{
-			if(i < temp->num_of_elem && new_key > temp->keys[i])
+			if(i < temp->num_of_elem && predicate(new_key,temp->keys[i]))
 			{
 				++i;
 				if(i == (_Order- 1))
@@ -447,8 +455,8 @@ void Tree<T,_Order>::push(T new_key)
 	}
 }
 
-template <typename T, int _Order>
-Node<T,_Order>* Tree<T,_Order>::split(Node<T,_Order>* big_child, int median, int pos, T new_key, stack<pair<Node<T,_Order>*, int> > &back_trace)
+template <typename T, int _Order , typename _Predicate>
+Node<T,_Order>* Tree<T,_Order,_Predicate>::split(Node<T,_Order>* big_child, int median, int pos, T new_key, stack<pair<Node<T,_Order>*, int> > &back_trace)
 {
 	Node<T,_Order> *parent,*new_rhs, *new_parent=0,*return_value;
 	int parent_pos,i,j;
@@ -567,8 +575,8 @@ Node<T,_Order>* Tree<T,_Order>::split(Node<T,_Order>* big_child, int median, int
 	return return_value;
 }
 
-template <typename T, int _Order>
-void Tree<T,_Order>::setlinks(Node<T,_Order>* parent,Node<T,_Order>* new_parent,Node<T,_Order>* big_child,Node<T,_Order>* new_rhs, int parent_pos,int median)	//when both big child and big parent are split
+template <typename T, int _Order , typename _Predicate>
+void Tree<T,_Order,_Predicate>::setlinks(Node<T,_Order>* parent,Node<T,_Order>* new_parent,Node<T,_Order>* big_child,Node<T,_Order>* new_rhs, int parent_pos,int median)	//when both big child and big parent are split
 {
 	if(parent_pos == median)
 	{
@@ -596,8 +604,8 @@ void Tree<T,_Order>::setlinks(Node<T,_Order>* parent,Node<T,_Order>* new_parent,
 	}
 }
 
-template <typename T, int _Order>
-void Tree<T,_Order>::setlinks(Node<T,_Order>* parent,Node<T,_Order>* big_child,Node<T,_Order>* new_rhs,int parent_pos)		//when only big child is split
+template <typename T, int _Order , typename _Predicate>
+void Tree<T,_Order,_Predicate>::setlinks(Node<T,_Order>* parent,Node<T,_Order>* big_child,Node<T,_Order>* new_rhs,int parent_pos)		//when only big child is split
 {
 	if(big_child->isempty())
 		parent->links[parent_pos] = 0;
@@ -607,14 +615,14 @@ void Tree<T,_Order>::setlinks(Node<T,_Order>* parent,Node<T,_Order>* big_child,N
 	parent->links[parent_pos+1] = new_rhs;
 }
 
-template <typename T, int _Order>
-void Tree<T,_Order>::disp() const
+template <typename T, int _Order , typename _Predicate>
+void Tree<T,_Order,_Predicate>::disp() const
 {
 	inorder_disp(root);
 }
 
-template <typename T, int _Order>
-void Tree<T,_Order>::inorder_disp(Node<T,_Order> *temp) const
+template <typename T, int _Order , typename _Predicate>
+void Tree<T,_Order,_Predicate>::inorder_disp(Node<T,_Order> *temp) const
 {
 	if(temp)
 	{
@@ -628,8 +636,8 @@ void Tree<T,_Order>::inorder_disp(Node<T,_Order> *temp) const
 	}
 }
 
-template <typename T, int _Order>
-void Tree<T,_Order>::show_deque(deque<Node<T,_Order>*> &dq) const
+template <typename T, int _Order , typename _Predicate>
+void Tree<T,_Order,_Predicate>::show_deque(deque<Node<T,_Order>*> &dq) const
 {
 	if(!dq.empty())
 	{
@@ -654,16 +662,16 @@ void Tree<T,_Order>::show_deque(deque<Node<T,_Order>*> &dq) const
 	}
 }
 
-template <typename T, int _Order>
-void Tree<T,_Order>::disp_like_tree() const
+template <typename T, int _Order , typename _Predicate>
+void Tree<T,_Order,_Predicate>::disp_like_tree() const
 {
 	deque<Node<T,_Order>* > dq;
 	dq.push_back(root);
 	show_deque(dq);
 }
 
-template <typename T, int _Order>
-void Tree<T,_Order>::free_all_nodes(Node<T,_Order>* temp)
+template <typename T, int _Order , typename _Predicate>
+void Tree<T,_Order,_Predicate>::free_all_nodes(Node<T,_Order>* temp)
 {
 	if(temp)
 	{
@@ -677,11 +685,34 @@ void Tree<T,_Order>::free_all_nodes(Node<T,_Order>* temp)
 	}
 }
 
-template <typename T, int _Order>
-Tree<T,_Order>::~Tree()
+template <typename T, int _Order , typename _Predicate>
+Tree<T,_Order,_Predicate>::~Tree()
 {
 	free_all_nodes(root);
 	root =0;
 }
+
+/**************************************************************************************************************/
+
+template<typename T>
+class More
+{
+public:
+	bool operator()(const T& a, const T& b)
+	{
+		return a > b;
+	}
+};
+
+template<typename T>
+class Less
+{
+public:
+	bool operator()(const T& a, const T& b)
+	{
+		return a < b;
+	}
+};
+
 
 #endif /* BTREE_H */

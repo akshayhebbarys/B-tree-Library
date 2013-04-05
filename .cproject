@@ -23,7 +23,9 @@
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1963703168" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug">
 								<option id="gnu.cpp.compiler.exe.debug.option.optimization.level.2103309698" name="Optimization Level" superClass="gnu.cpp.compiler.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.925680272" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
-								<option id="gnu.cpp.compiler.option.warnings.extrawarn.738805776" superClass="gnu.cpp.compiler.option.warnings.extrawarn" value="true" valueType="boolean"/>
+								<option id="gnu.cpp.compiler.option.warnings.extrawarn.738805776" name="Extra warnings (-Wextra)" superClass="gnu.cpp.compiler.option.warnings.extrawarn" value="true" valueType="boolean"/>
+								<option id="gnu.cpp.compiler.option.other.other.2138587876" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -std=c++0x" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.preprocessor.def.1196499960" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.633252378" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.2126498022" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug">
@@ -120,4 +122,5 @@
 			<resource resourceType="PROJECT" workspacePath="/b-tree"/>
 		</configuration>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>

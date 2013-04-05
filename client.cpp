@@ -7,12 +7,10 @@
 using namespace std;
 
 
-#include<typeinfo>
-#include<stack>
+#include <typeinfo>
+#include <stack>
 #include "btree.h"
-#include<cstdlib>
-
-#include<set>
+#include <cstdlib>
 
 template <typename T>
 void disp(T begin, T end)
@@ -23,15 +21,26 @@ void disp(T begin, T end)
 }
 
 
+template<typename T>
+class mycomp
+{
+public:
+	bool operator()(const T& a, const T& b) const
+	{
+		return a < b;
+	}
+};
+
 int main()
 {
+
 	cout << "Welcome to b-tree library !" << endl;
 
-	Tree <int> t;
+	Tree <int > t;
 
-	Tree <char, 3> c;
+	Tree <char,3,mycomp<char> > c;
 
-	Tree<string> str;
+	Tree<string,4,Less<string> > str;
 
 	srand(time(0));
 	for(int i=0;i<30;++i)
@@ -63,7 +72,11 @@ int main()
 	disp(c.begin(),c.end());
 
 
-	Tree<string>::Iterator it = str.begin();
+//	Tree<string,4,Less<string> >::Iterator it = str.begin();
+
+	auto it = str.begin();
+
+//	auto itt = str.end();
 
 	while(it != str.end())
 	{
@@ -74,7 +87,7 @@ int main()
 
 	str.push("aksh");
 	str.push("aksha");
-	str.push("aks");
+	str.push("heb");
 
 	it = str.begin();
 
