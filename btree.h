@@ -1,6 +1,6 @@
 /*
  * btree.h
- *      Author: akshay hebbar
+ *      Author: Akshay hebbar
  */
 
 #ifndef BTREE_H
@@ -18,18 +18,16 @@
  * 		bulk-loading
  * 		deletion
  * 		iterator	: done
- * 		may be providing a predicate for sort
- * 		improving the code efficiency
+ * 		providing a predicate for sort	: done
  * 		making it generic	: done
  */
 
-//template<typename> class More;
 
 
 template<typename> class More;
 template<typename> class Less;
 
-template <typename T, int =6 , typename = More<T> > class Tree ;
+template <typename T, int = 6 , typename = More<T> > class Tree ;
 
 template <typename T, int _Order>
 class Node
@@ -348,7 +346,7 @@ private:
 	Node<T,_Order>* split(Node<T,_Order>*, int,int,T,stack<pair<Node<T,_Order>*, int> > &);
 	void setlinks(Node<T,_Order>*,Node<T,_Order>*,Node<T,_Order>*,Node<T,_Order>*,int,int);					//when parent gets split
 	void setlinks(Node<T,_Order>*,Node<T,_Order>*,Node<T,_Order>*,int);								//when only big child is split
-	void free_all_nodes(Node<T,_Order>*);											//uses post-_Order
+	void free_all_nodes(Node<T,_Order>*);											//uses post-order
 	void show_deque(deque<Node<T,_Order>*> &) const;
 
 private:
@@ -549,28 +547,6 @@ Node<T,_Order>* Tree<T,_Order,_Predicate>::split(Node<T,_Order>* big_child, int 
 
 	if(new_root_created)
 		root = parent;
-
-#if 0
-	std::cout << "\nbig child : \n";
-	for(int i=0;i<big_child->num_of_elem;++i)
-		std::cout << big_child->keys[i]<<" ";
-	std::cout << "\nrhs : \n";
-	for(int i=0;i<new_rhs->num_of_elem;++i)
-		std::cout << new_rhs->keys[i]<<" ";
-	std::cout << "\nparent : \n";
-	for(int i=0;i<parent->num_of_elem;++i)
-		std::cout << parent->keys[i]<<" ";
-	if(new_parent != NULL)
-	{	std::cout << "\nnew parent : \n";
-		for(int i=0;i<new_parent->num_of_elem;++i)
-			std::cout << new_parent->keys[i]<<" ";
-	}
-	std::cout << "\nRoot : " << root  << " no of keys : " << root->num_of_elem << " first : " << root->keys[0] << " first link : " << root->links[0]<<endl;
-	for(int i=0;i<root->num_of_elem;++i)
-		std::cout << root->keys[i]<<" ";
-
-	std::cout << "\n****************************************\n";
-#endif
 
 	return return_value;
 }
