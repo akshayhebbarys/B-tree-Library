@@ -6,11 +6,13 @@
 #include<iostream>
 using namespace std;
 
+
 #include<typeinfo>
 #include<stack>
 #include "btree.h"
 #include<cstdlib>
 
+#include<set>
 
 template <typename T>
 void disp(T begin, T end)
@@ -25,14 +27,14 @@ int main()
 {
 	cout << "Welcome to b-tree library !" << endl;
 
-	Tree <int, 2>t;
+	Tree <int> t;
 
-	Tree<char, 2> c;
+	Tree <char, 3> c;
 
 	Tree<string> str;
 
 	srand(time(0));
-	for(int i=0;i<20;++i)
+	for(int i=0;i<30;++i)
 	{
 		int k=rand()%26;
 		cout << k<<" ";
@@ -40,11 +42,12 @@ int main()
 		c.push(65+k);
 	}
 
-//	Tree::Iterator it = t.begin();
+	cout << endl;
+
 //	Tree::Iterator it = t.end();
 
 	str.push("akshay");
-/*
+///*
 	cout<<endl;
 	t.disp();
 	cout<<endl;
@@ -52,15 +55,36 @@ int main()
 	cout<<endl;
 	str.disp();
 	cout<<endl;
-*/
+//*/
+	str.push("akshay");
 
-/*
-	while(it != t.end())
+	disp(str.begin(),str.end());
+
+	disp(c.begin(),c.end());
+
+
+	Tree<string>::Iterator it = str.begin();
+
+	while(it != str.end())
 	{
 		cout << *it << " ";
 		++it;
 	}
-*/
+	cout<<endl;
+
+	str.push("aksh");
+	str.push("aksha");
+	str.push("aks");
+
+	it = str.begin();
+
+	while(it != str.end())
+	{
+		cout << *it << " ";
+		++it;
+	}
+	cout<<endl;
+
 //	disp(t.begin(),t.end());
 
 //	cout << *it << endl;
@@ -85,11 +109,11 @@ int main()
 	}
 */
 
-	t.disp_like_tree();
+//	t.disp_like_tree();
 
-	c.disp_like_tree();
+//	c.disp_like_tree();
 
-	str.disp_like_tree();
+//	str.disp_like_tree();
 
 //	disp(c.begin(),c.end());
 

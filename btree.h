@@ -6,8 +6,9 @@
 #ifndef BTREE_H
 #define BTREE_H
 
-#include<stack>
-#include<deque>
+#include<stack>				//required to store path of traversal
+#include<deque>				//required to display our data structure as tree
+#include<cstdlib>				//used for 'exit' if client chooses bad '_Order'
 
 /*
  * Things to do:
@@ -19,11 +20,10 @@
  * 		iterator	: done
  * 		may be providing a predicate for sort
  * 		improving the code efficiency
- * 		<< operator overloading for Node
  * 		making it generic	: done
  */
 
-template<typename, int=10> class Tree;
+template<typename, int=6> class Tree;
 
 template <typename T, int _Order>
 class Node
@@ -38,7 +38,6 @@ private:
 		return !num_of_elem;
 	}
 
-//	int _Order;
 	int num_of_elem;
 	T *keys;
 	Node<T,_Order>* *links;
@@ -53,13 +52,13 @@ public:													//interface to btree
 	Tree();
 	void push(T new_key);
 	void disp() const;
-	void disp_like_tree() const;						//crashes if _Order=2
+	void disp_like_tree() const;
 	~Tree();
 
 	class Iterator
 	{
 	public:
-		Iterator() :ptr(0),pos(0),root(0){}
+		explicit Iterator() :ptr(0),pos(0),root(0){}
 
 		Iterator(Node<T,_Order>* Nptr, int position, stack <pair<Node<T,_Order>*, int> > trace, Node<T,_Order> * Root):ptr(Nptr),pos(position),back_trace(trace),root(Root){}
 
@@ -71,7 +70,7 @@ public:													//interface to btree
 			root = i.root;
 		}
 
-		int operator*() const
+		T operator*() const
 		{
 			return ptr->keys[pos];
 		}
@@ -300,7 +299,6 @@ public:													//interface to btree
 			return prev_val;
 		}
 
-
 	private:
 		Node<T,_Order> *ptr;
 		int pos;
@@ -333,7 +331,7 @@ public:													//interface to btree
 		return Iterator(temp,0,trace, root);
 	}
 
-	Iterator find(int key)											//not implemented
+	Iterator find(T key)											//not implemented
 	{
 		std::cout << key;
 		return Iterator();
@@ -348,7 +346,6 @@ private:
 	void show_deque(deque<Node<T,_Order>*> &) const;
 
 private:
-//	int _Order;
 	Node<T,_Order>* root;
 };
 
@@ -395,9 +392,13 @@ Node<T,_Order>::~Node()
 /**************************************************************************************************************/
 
 template <typename T, int _Order>
-Tree<T,_Order>::Tree()//:_Order(_Order),root(0)
+Tree<T,_Order>::Tree():root(0)
 {
-	root =0;
+	if(_Order < 2)
+	{
+		std::cerr << "\nCould not create B-tree\nOrder should be at-least 2 [ie Number of elements in each node should be at-least 1]\nAborting\n";
+		exit(1);
+	}
 }
 
 template <typename T, int _Order>
