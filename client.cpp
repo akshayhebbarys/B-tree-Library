@@ -40,7 +40,6 @@ int main()
 
 	Tree <char,3,mycomp<char> > c;
 
-	Tree<string,4,Less<string> > str;
 
 	srand(time(0));
 	for(int i=0;i<30;++i)
@@ -53,50 +52,32 @@ int main()
 
 	cout << endl;
 
-//	Tree::Iterator it = t.end();
+	Tree<int>::Iterator it = t.end();
 
-	str.push("akshay");
 ///*
 	cout<<endl;
 	t.disp();
 	cout<<endl;
 	c.disp();
 	cout<<endl;
-	str.disp();
-	cout<<endl;
 //*/
-	str.push("akshay");
 
-	disp(str.begin(),str.end());
 
 	disp(c.begin(),c.end());
 
 
-	Tree<string,4,Less<string> >::Iterator it = str.begin();
 
 //	auto it = str.begin();
 
 //	auto itt = str.end();
 
-	while(it != str.end())
+	while(it != t.end())
 	{
 		cout << *it << " ";
 		++it;
 	}
 	cout<<endl;
 
-	str.push("aksh");
-	str.push("aksha");
-	str.push("heb");
-
-	it = str.begin();
-
-	while(it != str.end())
-	{
-		cout << *it << " ";
-		++it;
-	}
-	cout<<endl;
 
 //	disp(t.begin(),t.end());
 

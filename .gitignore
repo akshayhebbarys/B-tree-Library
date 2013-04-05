@@ -1,5 +1,9 @@
-Debug/b-tree
-Debug/*.o
+Debug/*
+.settings/*
+Release/
+.cproject
+.project
+*.gch
 *.o
 *.out
 *~
