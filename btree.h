@@ -1,6 +1,6 @@
 /*
  * btree.h
- *      Author: Akshay hebbar
+ *      Authors: Akshay hebbar Y S
  */
 
 #ifndef BTREE_H
@@ -9,27 +9,15 @@
 #include <stack>				//required to store path of traversal
 #include <deque>				//required to display our data structure as tree
 #include <cstdlib>				//used for 'exit' if client chooses bad '_Order'
+#include <vector>				//used for bulk-loading
+#include <algorithm>			//to sort bulk loaded data
 
-/*
- * Things to do:
- * 		insertion : done
- * 		Traversal and display : done
- * 		find 			//- return iterator
- * 		bulk-loading
- * 		deletion
- * 		iterator	: done
- * 		providing a predicate for sort	: done
- * 		making it generic	: done
- */
+template<typename> class More;				//forward declaration of predicate
+template<typename> class Less;				//predicate
 
+template <typename T, int = 6 , typename = Less<T> > class Tree ;		// default values
 
-
-template<typename> class More;
-template<typename> class Less;
-
-template <typename T, int = 6 , typename = More<T> > class Tree ;
-
-template <typename T, int _Order>
+template <typename T, int _Order>			//Node class
 class Node
 {
 private:
@@ -49,6 +37,7 @@ private:
 	template < typename,int,typename> friend class Tree;
 };
 
+
 template <typename T, int _Order , typename _Predicate>
 class Tree
 {
@@ -58,6 +47,12 @@ public:													//interface to btree
 	void disp() const;
 	void disp_like_tree() const;
 	~Tree();
+
+	template <typename _ptr>
+		Tree(_ptr begin, _ptr end);
+
+
+	//---------- Iterator begins ----------
 
 	class Iterator
 	{
@@ -92,18 +87,13 @@ public:													//interface to btree
 		Iterator& operator++()
 		{
 			Node<T,_Order> *temp = ptr;
-//			std::cout << "iterator : " << temp->keys[0]<<" index : " << pos <<endl;
-//			std::cout << "Back trace top : " << back_trace.top().first->keys[0]<<" index : " << back_trace.top().second <<std::endl;
 			if(pos+1 <= temp->num_of_elem && temp->links[pos+1])
 			{
-//				std::cout << "popping2 : "<<back_trace.top().first->keys[0] << " index : " << back_trace.top().second << endl;
 				back_trace.pop();
-//				std::cout << "pushing2 : "<<temp->keys[0] << " index : " <<pos+1<< endl;
 				back_trace.push(pair<Node<T,_Order>*, int> (temp,pos+1));
 				temp = temp->links[pos+1];
 				while(temp)
 				{
-//					std::cout << "pushing : "<<temp->keys[0] << " index : " <<0<< endl;
 					back_trace.push(pair<Node<T,_Order> *,int> (temp,0));
 					temp = temp->links[0];
 				}
@@ -116,10 +106,7 @@ public:													//interface to btree
 			{
 				while(!back_trace.empty() && ((back_trace.top().second + 1 == back_trace.top().first->num_of_elem  && back_trace.top().first->links[back_trace.top().second+1] == 0 )||
 						back_trace.top().second + 1 > back_trace.top().first->num_of_elem ))
-				{
-//					std::cout << "popping3 : "<<back_trace.top().first->keys[0] << " index : " << back_trace.top().second << endl;
 					back_trace.pop();
-				}
 			}
 
 			if(back_trace.empty())						//if the stack becomes empty, make iterator point to end node
@@ -163,9 +150,7 @@ public:													//interface to btree
 			{
 				while(!back_trace.empty() && ((back_trace.top().second + 1 == back_trace.top().first->num_of_elem  && back_trace.top().first->links[back_trace.top().second+1] == 0 )||
 						back_trace.top().second + 1 > back_trace.top().first->num_of_elem ))
-				{
 					back_trace.pop();
-				}
 			}
 
 			if(back_trace.empty())						//if the stack becomes empty, make iterator point to end node
@@ -206,9 +191,8 @@ public:													//interface to btree
 				else
 				{
 					while( !back_trace.empty() && back_trace.top().second == 0)
-					{
 						back_trace.pop();
-					}
+
 					if(back_trace.empty())
 					{
 						Node<T,_Order>* temp = root;
@@ -265,9 +249,8 @@ public:													//interface to btree
 				else
 				{
 					while( !back_trace.empty() && back_trace.top().second == 0)
-					{
 						back_trace.pop();
-					}
+
 					if(back_trace.empty())
 					{
 						Node<T,_Order>* temp = root;
@@ -310,13 +293,14 @@ public:													//interface to btree
 		Node<T,_Order> *root;
 	};
 
+	//---------- Iterator ends ------------
+
 	Iterator begin()
 	{
 		stack <pair<Node<T,_Order>*, int> > trace;
 		Node<T,_Order>* temp = root;
 		while(temp)
 		{
-//			std::cout << "pushing : "<<temp->keys[0] << " index : " <<0<< endl;
 			trace.push(pair<Node<T,_Order>*, int>(temp,0));
 			temp=temp->links[0];
 		}
@@ -335,19 +319,63 @@ public:													//interface to btree
 		return Iterator(temp,0,trace, root);
 	}
 
-	Iterator find(T key)											//not implemented
+	Iterator find(T key)
 	{
-		std::cout << key;
-		return Iterator();
+		if(root == NULL)
+		{
+			return end();
+		}
+		else
+		{
+			Node<T,_Order> *temp = root;
+			stack <pair<Node<T,_Order>*, int> > back_trace;
+			int low, high, mid;
+			while(temp)
+			{
+				low = 0;
+				high = temp->num_of_elem - 1;
+				mid = (low + high)/2;
+				while(low <= high )
+				{
+					if(key == temp->keys[mid])
+					{
+						back_trace.push(pair<Node<T, _Order>*,int >(temp,mid));
+						return Iterator(back_trace.top().first,mid,back_trace, root);
+					}
+					else if(key < temp->keys[mid])
+					{
+						high = mid - 1;
+					}
+					else low = mid + 1;
+
+					mid = (low + high)/2;
+				}
+				if(key < temp->keys[mid])
+				{
+					back_trace.push(pair<Node<T,_Order>*,int>(temp,mid));
+					temp = temp->links[mid];
+				}
+				else
+				{
+					back_trace.push(pair<Node<T,_Order>*,int>(temp,mid+1));
+					temp = temp->links[mid+1];
+				}
+			}
+			return end();
+		}
 	}
 
 private:
-	void inorder_disp(Node<T,_Order>*) const;
 	Node<T,_Order>* split(Node<T,_Order>*, int,int,T,stack<pair<Node<T,_Order>*, int> > &);
 	void setlinks(Node<T,_Order>*,Node<T,_Order>*,Node<T,_Order>*,Node<T,_Order>*,int,int);					//when parent gets split
 	void setlinks(Node<T,_Order>*,Node<T,_Order>*,Node<T,_Order>*,int);								//when only big child is split
-	void free_all_nodes(Node<T,_Order>*);											//uses post-order
+	template <typename _low, typename _high>
+		Node<T, _Order>* link(_low& begin, _high& end);
+	template <typename _ptr>
+		int get_length(_ptr begin, _ptr end) const;
+	void inorder_disp(Node<T,_Order>*) const;
 	void show_deque(deque<Node<T,_Order>*> &) const;
+	void free_all_nodes(Node<T,_Order>*);											//uses post-order
 
 private:
 	Node<T,_Order>* root;
@@ -355,6 +383,7 @@ private:
 };
 
 /**************************************************************************************************************/
+
 template <typename T, int _Order>
 Node<T,_Order>::Node()
 {
@@ -363,7 +392,6 @@ Node<T,_Order>::Node()
 	links = new Node<T,_Order>*[_Order];
 	for(int i=0;i<_Order;++i)
 		links[i] = 0;
-//	std::cout << "ctor\n";
 }
 
 template <typename T, int _Order>
@@ -391,7 +419,6 @@ Node<T,_Order>::~Node()
 {
 	delete [] keys;
 	delete [] links;
-//	std::cout << "dtor\n";
 }
 
 /**************************************************************************************************************/
@@ -402,10 +429,180 @@ Tree<T,_Order,_Predicate>::Tree():root(0)
 	predicate = _Predicate();
 	if(_Order < 2)
 	{
-		std::cerr << "\nCould not create B-tree\nOrder should be at-least 2 [ie Number of elements in each node should be at-least 1]\nAborting\n";
+		std::cerr << "\nCould not create B-tree\nOrder should be at-least 2 "
+				"[ie Number of elements in each node should be at-least 1]\nAborting\n";
 		exit(1);
 	}
 }
+
+
+template <typename T, int _Order , typename _Predicate>
+template <typename _ptr>
+Tree<T,_Order, _Predicate>::Tree(_ptr begin, _ptr end)
+{
+	predicate = _Predicate();
+	if(_Order < 2)
+	{
+		std::cerr << "\nCould not create B-tree\nOrder should be at-least 2 "
+				"[ie Number of elements in each node should be at-least 1]\nAborting\n";
+		exit(1);
+	}
+
+	int length = get_length(begin,end);
+
+	sort(begin,end,predicate);
+
+	int mod = length%_Order;
+	int num_of_nodes = (length/_Order) + 1;
+	vector < Node<T, _Order>* > leaves(num_of_nodes);
+	vector < T > non_leaves;
+	if(length < _Order)							// If tree has single node
+	{
+		this->root = new Node<T, _Order>;
+		int j=0;
+		while(begin != end && this->root->insert(*begin++,j))
+		{
+			++j;
+		}
+	}
+	else if(mod >= (_Order-1)/2 )				// If no splitting occurs in base level (leaves)
+	{
+		for(int i=0; i<num_of_nodes; ++i)
+		{
+			leaves[i] = new Node<T, _Order>;
+			int j=0;
+			while(begin != end && leaves[i]->insert(*begin,j))
+			{
+				++j;
+				++begin;
+			}
+			non_leaves.push_back(*begin++);
+		}
+		non_leaves.pop_back();
+		this->root= link(leaves, non_leaves);		// For linking 	leaves and non-leaves
+	}
+	else										// splitting occurs in base level
+	{
+		int i, last;
+		last = mod +_Order;
+		for (i = 0; i < num_of_nodes-2; ++i)	// Follows normal insertion till last but 2 nodes
+		{
+			leaves[i] = new Node<T, _Order>;
+			int j=0;
+			while(leaves[i]->insert(*begin,j))
+			{
+				++j;
+				++begin;
+			}
+			non_leaves.push_back(*begin++);
+		}
+		leaves[i] = new Node<T, _Order>;		// creates last but 1 node
+		for (int j = 0; j < (last/2); ++j)
+		{
+			leaves[i]->insert(*begin++, j);
+		}
+		non_leaves.push_back(*begin++);
+		i++;
+		leaves[i] = new Node<T, _Order>;		// creates last node
+		for(int j=0; begin != end; j++)
+		{
+			leaves[i]->insert(*begin++, j);
+		}
+		this->root= link(leaves, non_leaves);
+	}
+}
+
+
+template <typename T, int _Order, typename _Predicate>
+template <typename _low, typename _high>
+Node<T, _Order>* Tree<T,_Order, _Predicate>::link(_low& low_level, _high& high_level)
+{
+	int high_size = high_level.size();
+
+	if(high_size < _Order)							// base condition : Node is root
+	{
+		Node<T, _Order>* root = new Node<T, _Order>;
+		int i = 0;
+		while (i < high_size)
+		{
+			root->insert(high_level[i],i);
+			root->links[i] = low_level[i];
+			++i;
+		}
+		root->links[i] = low_level[i];
+		return root;
+	}
+	else
+	{
+		int mod = high_size % _Order;
+		int num_of_nodes = (high_size/_Order) + 1;
+
+		vector < Node<T, _Order>* > leaves(num_of_nodes);
+		vector < T > non_leaves;
+
+		if(mod >= (_Order-1)/2)					// If no splitting occurs in high_level
+		{
+
+			int key_count=0, link_count=0;
+
+			for(int i=0; i<num_of_nodes; ++i)
+			{
+				leaves[i] = new Node<T, _Order>;
+				int j=0;
+				while(key_count != high_size && leaves[i]->insert(high_level[key_count] ,j))
+				{
+					leaves[i]->links[j] = low_level[link_count++];
+					++j;
+					++key_count;
+				}
+				leaves[i]->links[j] = low_level[link_count++];
+				non_leaves.push_back(high_level[key_count++]);
+			}
+			non_leaves.pop_back();
+		}
+		else
+		{
+			int i, last;
+			int key_count=0, link_count=0;
+			last = mod +_Order;
+			for (i = 0; i < num_of_nodes-2; ++i)
+			{
+				leaves[i] = new Node<T, _Order>;
+				int j=0;
+				while(leaves[i]->insert(high_level[key_count],j))
+				{
+					leaves[i]->links[j] = low_level[link_count++];
+					++j;
+					++key_count;
+				}
+				leaves[i]->links[j] = low_level[link_count++];
+				non_leaves.push_back(high_level[key_count++]);
+			}
+			leaves[i] = new Node<T, _Order>;
+			int j = 0;
+			for (; j < (last/2); ++j)
+			{
+				leaves[i]->insert(high_level[key_count++], j);
+				leaves[i]->links[j] = low_level[link_count++];
+			}
+			leaves[i]->links[j] = low_level[link_count++];
+			non_leaves.push_back(high_level[key_count++]);
+
+			i++;
+
+			leaves[i] = new Node<T, _Order>;
+			for(j=0; key_count != high_size; j++)
+			{
+				leaves[i]->insert(high_level[key_count++], j);
+				leaves[i]->links[j] = low_level[link_count++];
+			}
+			leaves[i]->links[j] = low_level[link_count++];
+		}
+		return link(leaves, non_leaves);
+	}
+}
+
+
 
 template <typename T, int _Order , typename _Predicate>
 void Tree<T,_Order,_Predicate>::push(T new_key)
@@ -423,7 +620,7 @@ void Tree<T,_Order,_Predicate>::push(T new_key)
 		int i=0;
 		while(found_pos != true)
 		{
-			if(i < temp->num_of_elem && predicate(new_key,temp->keys[i]))
+			if(i < temp->num_of_elem && predicate(temp->keys[i], new_key))
 			{
 				++i;
 				if(i == (_Order- 1))
@@ -453,6 +650,9 @@ void Tree<T,_Order,_Predicate>::push(T new_key)
 	}
 }
 
+/*
+ * 	Called when a node is full
+ */
 template <typename T, int _Order , typename _Predicate>
 Node<T,_Order>* Tree<T,_Order,_Predicate>::split(Node<T,_Order>* big_child, int median, int pos, T new_key, stack<pair<Node<T,_Order>*, int> > &back_trace)
 {
@@ -519,7 +719,6 @@ Node<T,_Order>* Tree<T,_Order,_Predicate>::split(Node<T,_Order>* big_child, int 
 			setlinks(parent,big_child,new_rhs,parent_pos);
 		}
 
-
 		return_value = big_child;
 	}
 	else
@@ -548,11 +747,17 @@ Node<T,_Order>* Tree<T,_Order,_Predicate>::split(Node<T,_Order>* big_child, int 
 	if(new_root_created)
 		root = parent;
 
+	if(big_child->isempty())
+		delete big_child;
+
 	return return_value;
 }
 
+/*
+ *	When both big child and big parent are split
+ */
 template <typename T, int _Order , typename _Predicate>
-void Tree<T,_Order,_Predicate>::setlinks(Node<T,_Order>* parent,Node<T,_Order>* new_parent,Node<T,_Order>* big_child,Node<T,_Order>* new_rhs, int parent_pos,int median)	//when both big child and big parent are split
+void Tree<T,_Order,_Predicate>::setlinks(Node<T,_Order>* parent,Node<T,_Order>* new_parent,Node<T,_Order>* big_child,Node<T,_Order>* new_rhs, int parent_pos,int median)
 {
 	if(parent_pos == median)
 	{
@@ -580,8 +785,12 @@ void Tree<T,_Order,_Predicate>::setlinks(Node<T,_Order>* parent,Node<T,_Order>* 
 	}
 }
 
+
+/*
+ *	When only big child is split
+ */
 template <typename T, int _Order , typename _Predicate>
-void Tree<T,_Order,_Predicate>::setlinks(Node<T,_Order>* parent,Node<T,_Order>* big_child,Node<T,_Order>* new_rhs,int parent_pos)		//when only big child is split
+void Tree<T,_Order,_Predicate>::setlinks(Node<T,_Order>* parent,Node<T,_Order>* big_child,Node<T,_Order>* new_rhs,int parent_pos)
 {
 	if(big_child->isempty())
 		parent->links[parent_pos] = 0;
@@ -595,6 +804,7 @@ template <typename T, int _Order , typename _Predicate>
 void Tree<T,_Order,_Predicate>::disp() const
 {
 	inorder_disp(root);
+	std::cout<<"\n";
 }
 
 template <typename T, int _Order , typename _Predicate>
@@ -602,10 +812,9 @@ void Tree<T,_Order,_Predicate>::inorder_disp(Node<T,_Order> *temp) const
 {
 	if(temp)
 	{
+		inorder_disp(temp->links[0]);
 		for(int i=0;i<temp->num_of_elem;++i)
 		{
-			if(i == 0)
-				inorder_disp(temp->links[i]);
 			std::cout << temp->keys[i]<< " " ;
 			inorder_disp(temp->links[i+1]);
 		}
@@ -615,7 +824,7 @@ void Tree<T,_Order,_Predicate>::inorder_disp(Node<T,_Order> *temp) const
 template <typename T, int _Order , typename _Predicate>
 void Tree<T,_Order,_Predicate>::show_deque(deque<Node<T,_Order>*> &dq) const
 {
-	if(!dq.empty())
+	while(!dq.empty())
 	{
 		int size = dq.size(),j;
 		for(int i=0; i< size;++i)
@@ -624,9 +833,10 @@ void Tree<T,_Order,_Predicate>::show_deque(deque<Node<T,_Order>*> &dq) const
 			dq.pop_front();
 			if(temp)
 			{
+				std::cout<< "|";
 				for(j=0;j<temp->num_of_elem;++j)
 				{
-					std::cout<<temp->keys[j] << " ";
+					std::cout<<temp->keys[j] << "|";
 					dq.push_back(temp->links[j]);
 				}
 				dq.push_back(temp->links[j]);
@@ -634,7 +844,6 @@ void Tree<T,_Order,_Predicate>::show_deque(deque<Node<T,_Order>*> &dq) const
 			}
 		}
 		std::cout << "\n";
-		show_deque(dq);
 	}
 }
 
@@ -651,14 +860,24 @@ void Tree<T,_Order,_Predicate>::free_all_nodes(Node<T,_Order>* temp)
 {
 	if(temp)
 	{
+		free_all_nodes(temp->links[0]);
 		for(int i=0;i<temp->num_of_elem;++i)
-		{
-			if(i ==0 )
-				free_all_nodes(temp->links[i]);
 			free_all_nodes(temp->links[i+1]);
-		}
 		delete temp;
 	}
+}
+
+template <typename T, int _Order , typename _Predicate>
+template <typename _ptr>
+int Tree<T,_Order,_Predicate>::get_length(_ptr begin, _ptr end) const
+{
+	int count = 0;
+	while(begin != end)
+	{
+		++begin;
+		++count;
+	}
+	return count;
 }
 
 template <typename T, int _Order , typename _Predicate>
@@ -669,16 +888,7 @@ Tree<T,_Order,_Predicate>::~Tree()
 }
 
 /**************************************************************************************************************/
-
-template<typename T>
-class More
-{
-public:
-	bool operator()(const T& a, const T& b)
-	{
-		return a > b;
-	}
-};
+//Predicates
 
 template<typename T>
 class Less
@@ -690,5 +900,14 @@ public:
 	}
 };
 
+template<typename T>
+class More
+{
+public:
+	bool operator()(const T& a, const T& b)
+	{
+		return a > b;
+	}
+};
 
 #endif /* BTREE_H */
