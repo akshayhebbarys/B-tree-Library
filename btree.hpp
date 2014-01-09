@@ -1,10 +1,10 @@
 /*
- * btree.h
+ * btree.hpp
  *      Authors: Akshay hebbar Y S
  */
 
-#ifndef BTREE_H
-#define BTREE_H
+#ifndef BTREE_HPP
+#define BTREE_HPP
 
 #include <stack>				//required to store path of traversal
 #include <deque>				//required to display our data structure as tree
